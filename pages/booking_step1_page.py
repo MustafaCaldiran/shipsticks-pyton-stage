@@ -373,7 +373,7 @@ class BookingStep1Page(BasePage):
         if "items" in scenario and scenario["items"]:
             return BookingStep1Page._normalize_item_configs(scenario["items"])
         return BookingStep1Page._normalize_item_configs([{
-            "category": scenario["item_category"],
+            "category": scenario.get("item_category") or scenario["itemCategory"],
             "quantity": 1,
-            "sizes": [scenario["item_size"]],
+            "sizes": [scenario.get("item_size") or scenario["itemSize"]],
         }])

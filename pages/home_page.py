@@ -178,16 +178,23 @@ class HomePage(BasePage):
         Expected keys: first_name, last_name, email, country,
                        how_did_you_hear, phone_number
         """
-        self.type_with_focus_guard(self.first_name_field, data["first_name"])
-        self.type_with_focus_guard(self.last_name_field, data["last_name"])
-        self.type_with_focus_guard(self.email_field_in_signup, data["email"])
+        first_name = data.get("first_name") or data.get("firstName")
+        last_name = data.get("last_name") or data.get("lastName")
+        email = data["email"]
+        country = data.get("country")
+        how_did_you_hear = data.get("how_did_you_hear") or data.get("howDidYouHear")
+        phone_number = data.get("phone_number") or data.get("phoneNumber")
 
-        if "country" in data:
-            self.select_country(data["country"])
-        if "how_did_you_hear" in data:
-            self.select_how_did_you_hear(data["how_did_you_hear"])
-        if "phone_number" in data:
-            self.type_with_focus_guard(self.phone_number_field, data["phone_number"])
+        self.type_with_focus_guard(self.first_name_field, first_name)
+        self.type_with_focus_guard(self.last_name_field, last_name)
+        self.type_with_focus_guard(self.email_field_in_signup, email)
+
+        if country:
+            self.select_country(country)
+        if how_did_you_hear:
+            self.select_how_did_you_hear(how_did_you_hear)
+        if phone_number:
+            self.type_with_focus_guard(self.phone_number_field, phone_number)
 
     def click_continue_to_create_password(self) -> None:
         expect(self.continue_button).to_be_enabled(timeout=10000)

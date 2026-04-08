@@ -80,20 +80,23 @@ class PaymentPage(BasePage):
                        expiration_date, cvc, billing_country (optional),
                        zip_code (optional)
         """
-        self.card_first_name.fill(data["first_name"])
-        self.card_last_name.fill(data["last_name"])
-        self.card_number.fill(data["card_number"])
-        self.expiration_date.fill(data["expiration_date"])
+        self.card_first_name.fill(data.get("first_name") or data["firstName"])
+        self.card_last_name.fill(data.get("last_name") or data["lastName"])
+        self.card_number.fill(data.get("card_number") or data["cardNumber"])
+        self.expiration_date.fill(data.get("expiration_date") or data["expirationDate"])
         self.cvc.fill(data["cvc"])
 
-        if data.get("billing_country"):
-            self.billing_country_button.click()
-            self.page.get_by_text(data["billing_country"], exact=True).click()
+        billing_country = data.get("billing_country") or data.get("billingCountry")
+        zip_code = data.get("zip_code") or data.get("zipCode")
 
-        if data.get("zip_code"):
+        if billing_country:
+            self.billing_country_button.click()
+            self.page.get_by_text(billing_country, exact=True).click()
+
+        if zip_code:
             try:
                 self.billing_zip.wait_for(state="visible", timeout=5000)
-                self.billing_zip.fill(data["zip_code"])
+                self.billing_zip.fill(zip_code)
             except PlaywrightTimeout:
                 pass
 

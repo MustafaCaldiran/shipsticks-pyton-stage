@@ -1,4 +1,4 @@
-"""Global auth setup aligned with the JavaScript repo's API login flow."""
+"""Global auth setup matching the JavaScript framework."""
 
 from __future__ import annotations
 
@@ -6,6 +6,7 @@ import logging
 import re
 import time
 from pathlib import Path
+from urllib.parse import urlencode
 
 from playwright.sync_api import sync_playwright
 
@@ -13,68 +14,73 @@ from config.settings import settings
 
 log = logging.getLogger("global_setup")
 
+AUTH_CREDENTIALS = {
+    "email": settings.auth_email,
+    "password": settings.auth_password,
+}
 STORAGE_STATE_PATH = Path(__file__).resolve().parent.parent / ".auth" / "storageState.json"
 CSRF_PATTERN = re.compile(r'<meta[^>]+name="csrf-token"[^>]+content="([^"]+)"')
 
 
-def _extract_csrf_token(html: str) -> str:
-    match = CSRF_PATTERN.search(html)
-    return match.group(1) if match else ""
-
-
 def run_global_setup() -> Path:
-    """Create a persisted authenticated session if the environment allows it."""
+    """Log in once via Devise and persist the session storage state."""
+    base_url = settings.api_url
+
+    log.info("globalSetup: logging in against %s (TEST_ENV=%s)", base_url, settings.test_env)
     STORAGE_STATE_PATH.parent.mkdir(parents=True, exist_ok=True)
 
     with sync_playwright() as playwright:
         api_context = playwright.request.new_context(
-            base_url=settings.web_base_url,
+            base_url=base_url,
             ignore_https_errors=True,
         )
 
         csrf_token = ""
         for attempt in range(1, 4):
-            login_page = api_context.get("/users/sign_in")
-            csrf_token = _extract_csrf_token(login_page.text())
-            if csrf_token:
+            response = api_context.get("/users/sign_in")
+            html = response.text()
+            match = CSRF_PATTERN.search(html)
+            if match:
+                csrf_token = match.group(1)
                 break
             if attempt == 3:
                 log.warning(
-                    "global_setup: %s did not return a CSRF token after 3 attempts. "
-                    "Authenticated tests may fail.",
-                    settings.web_base_url,
+                    "globalSetup: %s server did not return CSRF token after 3 attempts. "
+                    "Skipping login. Tests requiring auth may fail.",
+                    settings.test_env,
                 )
                 api_context.dispose()
                 return STORAGE_STATE_PATH
             time.sleep(2)
 
-        response = api_context.post(
+        body = urlencode(
+            {
+                "utf8": "✓",
+                "authenticity_token": csrf_token,
+                "user[email]": AUTH_CREDENTIALS["email"],
+                "user[password]": AUTH_CREDENTIALS["password"],
+                "user[remember_me]": "0",
+            }
+        )
+        login_response = api_context.post(
             "/users/sign_in",
             headers={
                 "Content-Type": "application/x-www-form-urlencoded",
                 "X-Requested-With": "XMLHttpRequest",
                 "Accept": "application/json, text/javascript, */*; q=0.01",
-                "Referer": f"{settings.web_base_url}/users/sign_in",
+                "Referer": f"{base_url}/users/sign_in",
             },
-            data=(
-                "utf8=%E2%9C%93"
-                f"&authenticity_token={csrf_token}"
-                f"&user%5Bemail%5D={settings.auth_email}"
-                f"&user%5Bpassword%5D={settings.auth_password}"
-                "&user%5Bremember_me%5D=0"
-            ),
+            data=body,
         )
-
-        if not response.ok:
+        if not login_response.ok:
             log.warning(
-                "global_setup: login request failed with status %s. "
-                "Authenticated tests may fail.",
-                response.status,
+                "globalSetup: login request failed with status %s. Skipping session save.",
+                login_response.status,
             )
             api_context.dispose()
             return STORAGE_STATE_PATH
 
         api_context.storage_state(path=str(STORAGE_STATE_PATH))
         api_context.dispose()
-        log.info("global_setup: session saved to %s", STORAGE_STATE_PATH)
+        log.info("globalSetup: API login complete, session saved to %s", STORAGE_STATE_PATH)
         return STORAGE_STATE_PATH
