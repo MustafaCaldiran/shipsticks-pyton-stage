@@ -205,7 +205,7 @@ class HomePage(BasePage):
     # ==================================================================
 
     def assert_finishing_signup_visible(self) -> None:
-        expect(self.finishing_signup_heading).to_be_visible(timeout=10000)
+        expect(self.signup_password_field).to_be_visible(timeout=10000)
 
     def fill_password_fields(self, password: str) -> None:
         """Fill both password fields, check terms, and submit."""
