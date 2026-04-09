@@ -254,6 +254,35 @@ Run API-only coverage:
 pytest tests/test_api_user.py tests/test_create_user.py
 ```
 
+## Playwright MCP In This Repo
+
+This repo includes a Python launcher at [`scripts/playwright_mcp.py`](/Users/mustafasapple/RXTesting/shipsticks-python-framework/scripts/playwright_mcp.py).
+
+Use it when you want the official Microsoft Playwright MCP server to inherit this framework's Python-side config instead of starting with generic defaults.
+
+What it does:
+
+- loads `TEST_ENV`, `BASE_URL`, viewport, browser choice, and launch flags from [`config/settings.py`](/Users/mustafasapple/RXTesting/shipsticks-python-framework/config/settings.py)
+- runs the existing auth bootstrap from [`fixtures/global_setup.py`](/Users/mustafasapple/RXTesting/shipsticks-python-framework/fixtures/global_setup.py)
+- writes a generated config file to `.mcp/playwright.config.json`
+- launches `npx @playwright/mcp@latest --config ...`
+
+Run it from the repo root:
+
+```bash
+python3 scripts/playwright_mcp.py
+```
+
+Examples:
+
+```bash
+TEST_ENV=staging python3 scripts/playwright_mcp.py
+```
+
+```bash
+BASE_URL=https://www.shipsticks.com HEADED=true python3 scripts/playwright_mcp.py --port 8931
+```
+
 ## Headed, Debug, Parallel, and Reporting
 
 Headed:

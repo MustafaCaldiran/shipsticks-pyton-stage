@@ -16,8 +16,9 @@ A production-ready, interview-quality E2E test automation framework built with *
 8. [Environment Switching](#environment-switching)
 9. [Reporting](#reporting)
 10. [Parallel Execution](#parallel-execution)
-11. [Extending the Framework](#extending-the-framework)
-12. [Interview Talking Points](#interview-talking-points)
+11. [Playwright MCP](#playwright-mcp)
+12. [Extending the Framework](#extending-the-framework)
+13. [Interview Talking Points](#interview-talking-points)
 
 ---
 
@@ -434,6 +435,58 @@ pytest -n 4       # Fixed 4 workers
 - Sign-up tests create new users — parallel runs may hit rate limits
 - The staging server may throttle concurrent connections
 - Bot protection is more likely to trigger with parallel requests
+
+---
+
+## Playwright MCP
+
+This repo includes a project-aware launcher for the official Microsoft Playwright MCP server.
+
+Why this exists:
+
+- it keeps MCP browser sessions aligned with the same `TEST_ENV`, `BASE_URL`, viewport, and launch flags used by the Python suite
+- it reuses `.auth/storageState.json` when auth bootstrap succeeds
+- it avoids maintaining a second copy of browser settings by hand
+
+Requirements:
+
+- Node.js 18+ with `npx`
+- Python dependencies from `requirements.txt`
+
+Run it from the repo root:
+
+```bash
+python3 scripts/playwright_mcp.py
+```
+
+The launcher will:
+
+1. load repo settings from `config/settings.py`
+2. run the existing auth bootstrap from `fixtures/global_setup.py`
+3. generate `.mcp/playwright.config.json`
+4. start `npx @playwright/mcp@latest --config .mcp/playwright.config.json`
+
+Examples:
+
+```bash
+TEST_ENV=staging python3 scripts/playwright_mcp.py
+```
+
+```bash
+BASE_URL=https://www.shipsticks.com HEADED=true python3 scripts/playwright_mcp.py
+```
+
+```bash
+python3 scripts/playwright_mcp.py --port 8931
+```
+
+If you want Codex to use this project-specific launcher instead of raw `npx`, add this to `~/.codex/config.toml`:
+
+```toml
+[mcp_servers.playwright]
+command = "python3"
+args = ["/Users/mustafasapple/RXTesting/shipsticks-python-framework/scripts/playwright_mcp.py"]
+```
 
 ---
 
