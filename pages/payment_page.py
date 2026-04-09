@@ -7,7 +7,7 @@ from __future__ import annotations
 import re
 from typing import TYPE_CHECKING
 
-from playwright.sync_api import expect, TimeoutError as PlaywrightTimeout
+from playwright.sync_api import expect, Error as PlaywrightError, TimeoutError as PlaywrightTimeout
 
 from pages.base_page import BasePage
 
@@ -21,9 +21,9 @@ class PaymentPage(BasePage):
         super().__init__(page, base_url)
 
         self.heading = page.get_by_role(
-            "heading", name=re.compile(r"(?i)additional options.*payment details")
+            "heading", name=re.compile(r"additional options.*payment details", re.I)
         )
-        self.coverage_dropdown = page.get_by_role("button", name=re.compile(r"(?i)coverage amount\*"))
+        self.coverage_dropdown = page.get_by_role("button", name=re.compile(r"coverage amount\*", re.I))
 
         # Pickup method
         self.have_them_picked_up = page.get_by_text("Have them picked up")
@@ -33,13 +33,13 @@ class PaymentPage(BasePage):
         )
 
         # Credit card fields
-        self.card_number = page.get_by_role("textbox", name=re.compile(r"(?i)card number\*"))
-        self.expiration_date = page.get_by_role("textbox", name=re.compile(r"(?i)expiration date\*"))
-        self.cvc = page.get_by_role("textbox", name=re.compile(r"(?i)cvc\*"))
+        self.card_number = page.get_by_role("textbox", name=re.compile(r"card number\*", re.I))
+        self.expiration_date = page.get_by_role("textbox", name=re.compile(r"expiration date\*", re.I))
+        self.cvc = page.get_by_role("textbox", name=re.compile(r"cvc\*", re.I))
         self.billing_country_button = page.get_by_role("button", name="United States of America")
-        self.billing_zip = page.get_by_role("textbox", name=re.compile(r"(?i)billing zip code\*"))
-        self.card_first_name = page.get_by_role("textbox", name=re.compile(r"(?i)first name\*"))
-        self.card_last_name = page.get_by_role("textbox", name=re.compile(r"(?i)last name\*"))
+        self.billing_zip = page.get_by_role("textbox", name=re.compile(r"billing zip code\*", re.I))
+        self.card_first_name = page.get_by_role("textbox", name=re.compile(r"first name\*", re.I))
+        self.card_last_name = page.get_by_role("textbox", name=re.compile(r"last name\*", re.I))
 
         # Navigation
         self.next_review_order_button = (
@@ -97,7 +97,7 @@ class PaymentPage(BasePage):
             try:
                 self.billing_zip.wait_for(state="visible", timeout=5000)
                 self.billing_zip.fill(zip_code)
-            except PlaywrightTimeout:
+            except (PlaywrightTimeout, PlaywrightError):
                 pass
 
     def proceed_to_review_order(self) -> None:

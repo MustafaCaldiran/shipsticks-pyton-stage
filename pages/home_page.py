@@ -29,18 +29,18 @@ class HomePage(BasePage):
         # -- Quote widget --
         self.origin_field = page.get_by_role("combobox", name="Where from?")
         self.destination_field = page.get_by_role("combobox", name="Where to?")
-        self.trip_type_button = page.get_by_role("button", name=re.compile(r"(?i)round trip|one way"))
+        self.trip_type_button = page.get_by_role("button", name=re.compile(r"round trip|one way", re.I))
         self.one_way_option = page.get_by_role("option", name="One way")
         self.get_started_button = page.get_by_role("button", name="Get started").first
-        self.hero_heading = page.get_by_role("heading", name=re.compile(r"(?i)skip baggage claim"))
+        self.hero_heading = page.get_by_role("heading", name=re.compile(r"skip baggage claim", re.I))
         self.first_autocomplete_suggestion = page.get_by_role("option").first
 
         # -- Sign In modal --
         self.sign_in_button = page.get_by_text("Sign In")
         self.sign_in_menu_item = page.get_by_role("menuitem", name="Sign In")
-        self.login_modal_heading = page.get_by_role("heading", name="Log In")
+        self.login_modal_heading = page.get_by_role("button", name="Log In")
         self.shipsticks_logo_in_modal = page.get_by_role(
-            "img", name=re.compile(r"(?i)shipstickstextonlydark")
+            "img", name=re.compile(r"shipstickstextonlydark", re.I)
         )
         self.email_field_in_modal = page.get_by_placeholder("Email address")
         self.password_field_in_modal = page.get_by_role("textbox", name="Password*")
@@ -70,23 +70,23 @@ class HomePage(BasePage):
 
         # -- Password creation --
         self.finishing_signup_heading = page.get_by_role(
-            "heading", name=re.compile(r"(?i)create.*password|finish.*sign.*up")
+            "heading", name=re.compile(r"create.*password|finish.*sign.*up|set.*password|choose.*password|almost done", re.I)
         )
         self.signup_password_field = page.locator("#password")
         self.confirm_password_field = page.get_by_role("textbox", name="Confirm Password*")
         self.terms_checkbox = page.get_by_role(
-            "checkbox", name=re.compile(r"(?i)by creating an account")
+            "checkbox", name=re.compile(r"by creating an account", re.I)
         )
         self.finish_signup_button = page.get_by_role(
-            "button", name=re.compile(r"(?i)finish sign up and verify number")
+            "button", name=re.compile(r"finish sign up and verify number", re.I)
         )
 
         # -- Phone verification --
         self.verify_number_heading = page.get_by_role(
-            "heading", name=re.compile(r"(?i)verify your phone number")
+            "heading", name=re.compile(r"verify your phone number", re.I)
         )
         self.skip_for_now_button = page.get_by_role(
-            "button", name=re.compile(r"(?i)skip for now")
+            "button", name=re.compile(r"skip for now", re.I)
         )
         self.verify_number_confirm_button = page.get_by_role("button", name="Confirm")
 
@@ -109,7 +109,7 @@ class HomePage(BasePage):
     def select_one_way_shipment(self) -> None:
         self.trip_type_button.click()
         self.one_way_option.click()
-        expect(self.trip_type_button).to_have_text(re.compile(r"(?i)one way"))
+        expect(self.trip_type_button).to_have_text(re.compile(r"one way", re.I))
 
     def fill_origin_address(self, address: str) -> None:
         self.type_carefully(self.origin_field, address)

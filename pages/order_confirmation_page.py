@@ -21,7 +21,7 @@ class OrderConfirmationPage(BasePage):
         super().__init__(page, base_url)
 
         self.heading = page.get_by_role(
-            "heading", name=re.compile(r"(?i)your order is complete")
+            "heading", name=re.compile(r"your order is complete", re.I)
         )
 
     def assert_loaded(self) -> None:

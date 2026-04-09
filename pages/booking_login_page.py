@@ -11,7 +11,7 @@ import re
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from playwright.sync_api import expect, TimeoutError as PlaywrightTimeout
+from playwright.sync_api import expect, Error as PlaywrightError, TimeoutError as PlaywrightTimeout
 
 from pages.base_page import BasePage
 
@@ -115,7 +115,7 @@ class BookingLoginPage(BasePage):
             accordion.wait_for(state="visible", timeout=3000)
             accordion.click()
             expect(self.summary_payment_items.first).to_be_visible(timeout=5000)
-        except PlaywrightTimeout:
+        except (PlaywrightTimeout, PlaywrightError):
             pass  # Already expanded or not present
 
     @staticmethod

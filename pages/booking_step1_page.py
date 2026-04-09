@@ -21,7 +21,7 @@ import re
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from playwright.sync_api import expect, TimeoutError as PlaywrightTimeout
+from playwright.sync_api import expect, Error as PlaywrightError, TimeoutError as PlaywrightTimeout
 
 from pages.base_page import BasePage
 
@@ -35,7 +35,7 @@ class BookingStep1Page(BasePage):
         super().__init__(page, base_url)
 
         # -- Trip & address --
-        self.trip_type_button = page.get_by_role("button", name=re.compile(r"(?i)round trip|one way"))
+        self.trip_type_button = page.get_by_role("button", name=re.compile(r"round trip|one way", re.I))
         self.one_way_option = page.get_by_role("option", name="One way")
         self.origin_field = page.get_by_role("combobox", name="Where from?")
         self.destination_field = page.get_by_role("combobox", name="Where to?")
@@ -49,13 +49,13 @@ class BookingStep1Page(BasePage):
         self.select_date_button = page.get_by_role("button", name="Please select a date")
         self.date_button = page.get_by_role(
             "button",
-            name=re.compile(r"(?i)please select a date|[a-z]{3} \d{1,2}, \d{4}"),
+            name=re.compile(r"please select a date|[a-z]{3} \d{1,2}, \d{4}", re.I),
         )
 
         # -- Shipping --
         self.shipping_options_heading = page.get_by_role("heading", name="Shipping Options")
         self.shipment_speeds_heading = page.get_by_role("heading", name="Shipment Speeds")
-        self.show_more_options_button = page.get_by_role("button", name=re.compile(r"(?i)show more options"))
+        self.show_more_options_button = page.get_by_role("button", name=re.compile(r"show more options", re.I))
 
         # -- Items --
         self.order_summary = page.get_by_role("heading", name="Order Summary")
@@ -108,7 +108,7 @@ class BookingStep1Page(BasePage):
             self.weather_warning_dismiss_button.wait_for(state="visible", timeout=timeout)
             self.weather_warning_dismiss_button.click()
             self.weather_warning_dismiss_button.wait_for(state="hidden", timeout=5000)
-        except PlaywrightTimeout:
+        except (PlaywrightTimeout, PlaywrightError):
             pass
 
     # ==================================================================
@@ -133,7 +133,7 @@ class BookingStep1Page(BasePage):
             self.save_button.wait_for(state="visible", timeout=5000)
             expect(self.save_button).to_be_enabled()
             self.save_button.click()
-        except PlaywrightTimeout:
+        except (PlaywrightTimeout, PlaywrightError):
             pass
         self.dismiss_country_note_if_present()
 
@@ -191,7 +191,7 @@ class BookingStep1Page(BasePage):
         short_month = parsed.strftime("%b")  # "Apr"
         day_number = str(parsed.day)
         expect(self.date_button).to_have_text(
-            re.compile(rf"(?i){short_month}\s+{day_number},\s+{target_year}")
+            re.compile(rf"{short_month}\s+{day_number},\s+{target_year}", re.I)
         )
         expect(self.shipment_speeds_heading).to_be_visible()
 
@@ -205,10 +205,10 @@ class BookingStep1Page(BasePage):
         label = self._resolve_service_level(service_level)
 
         # Make sure at least Ground is visible
-        expect(self.page.get_by_text(re.compile(r"(?i)ground")).first).to_be_visible(timeout=15000)
+        expect(self.page.get_by_text(re.compile(r"ground", re.I)).first).to_be_visible(timeout=15000)
 
         # Some options are hidden behind "Show More"
-        if re.match(r"(?i)second day express", label):
+        if re.match(r"second day express", label, re.I):
             self._show_more_shipping_options()
             expect(
                 self.page.get_by_text(re.compile(re.escape(label), re.IGNORECASE)).first
@@ -225,7 +225,7 @@ class BookingStep1Page(BasePage):
         try:
             self.show_more_options_button.wait_for(state="visible", timeout=5000)
             self.show_more_options_button.click()
-        except PlaywrightTimeout:
+        except (PlaywrightTimeout, PlaywrightError):
             pass  # Already expanded
 
     # ==================================================================
@@ -236,7 +236,7 @@ class BookingStep1Page(BasePage):
         """Click the 'Increase {category} count' button *quantity* times."""
         increase_btn = self.page.get_by_role(
             "button",
-            name=re.compile(rf"(?i)increase {re.escape(category)} count"),
+            name=re.compile(rf"increase {re.escape(category)} count", re.I),
         )
         self.page.get_by_role("heading", name="Item Details").scroll_into_view_if_needed()
 

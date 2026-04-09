@@ -42,10 +42,10 @@ class ReviewPage(BasePage):
         if match:
             amount = match.group(0).split(".")[0]  # "$2,500"
             expect(
-                self.page.get_by_text(re.compile(rf"(?i)covers up to.*{re.escape(amount)}")).first
+                self.page.get_by_text(re.compile(rf"covers up to.*{re.escape(amount)}", re.I)).first
             ).to_be_visible(timeout=10000)
 
     def confirm_and_pay(self) -> None:
-        btn = self.page.get_by_role("button", name=re.compile(r"(?i)confirm and pay"))
+        btn = self.page.get_by_role("button", name=re.compile(r"confirm and pay", re.I))
         expect(btn).to_be_enabled(timeout=10000)
         btn.click()

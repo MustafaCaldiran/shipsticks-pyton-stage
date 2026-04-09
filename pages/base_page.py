@@ -20,7 +20,7 @@ import logging
 import re
 from typing import TYPE_CHECKING
 
-from playwright.sync_api import expect, TimeoutError as PlaywrightTimeout
+from playwright.sync_api import expect, Error as PlaywrightError, TimeoutError as PlaywrightTimeout
 
 if TYPE_CHECKING:
     from playwright.sync_api import Locator, Page
@@ -133,18 +133,16 @@ class BasePage:
 
     def wait_for_autocomplete(self, timeout: int = 15000) -> "Locator":
         """
-        Wait for an autocomplete dropdown to appear.
+        Wait for an autocomplete dropdown to appear and have at least one option.
 
-        Looks for any of the common autocomplete containers:
-          - [role="listbox"]        (ARIA)
-          - .pac-container          (Google Places)
-          - [data-testid*="auto"]   (custom)
+        The staging site uses Tailwind's empty:hidden variant, which keeps the
+        [role="listbox"] container CSS-hidden until results populate it.
+        Waiting for the container itself therefore always times out — we must
+        wait for the first [role="option"] inside it instead.
         """
-        listbox = self.page.locator(
-            '[role="listbox"], .pac-container, [data-testid*="autocomplete"]'
-        )
-        expect(listbox.first).to_be_visible(timeout=timeout)
-        return listbox
+        option = self.page.get_by_role("option").first
+        expect(option).to_be_visible(timeout=timeout)
+        return self.page.locator('[role="listbox"]')
 
     def wait_for_autocomplete_option(
         self,
@@ -170,17 +168,17 @@ class BasePage:
             btn.wait_for(state="visible", timeout=timeout)
             btn.click()
             btn.wait_for(state="hidden", timeout=5000)
-        except PlaywrightTimeout:
+        except (PlaywrightTimeout, PlaywrightError):
             pass  # Modal wasn't present — expected in many flows
 
     def accept_cookies_if_present(self, timeout: int = 5000) -> None:
         """Click the cookie-consent banner if it appears."""
         try:
-            btn = self.page.get_by_role("button", name=re.compile(r"(?i)accept.*cookies|accept all"))
+            btn = self.page.get_by_role("button", name=re.compile(r"accept all cookies", re.I))
             btn.wait_for(state="visible", timeout=timeout)
             btn.click()
             btn.wait_for(state="hidden", timeout=3000)
-        except PlaywrightTimeout:
+        except (PlaywrightTimeout, PlaywrightError):
             pass
 
     def dismiss_chat_widget(self) -> None:

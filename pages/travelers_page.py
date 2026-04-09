@@ -22,9 +22,9 @@ class TravelersPage(BasePage):
 
         self.heading = page.get_by_role("heading", name="Traveler Details")
         self.address_field = page.get_by_role("combobox", name="Address*").first
-        self.city_field = page.get_by_role("textbox", name=re.compile(r"(?i)city\*"))
-        self.state_field = page.get_by_role("combobox", name=re.compile(r"(?i)choose state"))
-        self.zip_field = page.get_by_role("textbox", name=re.compile(r"(?i)zip code\*"))
+        self.city_field = page.get_by_role("textbox", name=re.compile(r"city\*", re.I))
+        self.state_field = page.get_by_role("combobox", name=re.compile(r"choose state", re.I))
+        self.zip_field = page.get_by_role("textbox", name=re.compile(r"zip code\*", re.I))
         self.next_button = (
             page.locator("span").filter(has_text="Next: Package and Protection").first
         )
